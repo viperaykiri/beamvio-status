@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  probe:
+  watchdog:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,12 +23,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Yokla
-        id: probe
+      # Ölçüm noktasının son sonucu (tek commit'lik `heartbeat` dalı).
+      - name: Nabzı al
+        run: |
+          git fetch --depth=1 origin heartbeat && git show FETCH_HEAD:heartbeat.json > heartbeat.json || echo "{}" > heartbeat.json
+
+      - name: Değerlendir
         env:
-          RELAY_ADDR: ${{ secrets.RELAY_ADDR }}
           KNOWN_ISSUES: ${{ vars.KNOWN_ISSUES }}
-        run: python probe.py
+        run: python watchdog.py
 
       # Durum değiştiyse (ya da günde bir kez, deponun etkin kalması için) kaydet.
       - name: Kaydet

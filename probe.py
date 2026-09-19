@@ -1,14 +1,11 @@
-"""BeamVio dış sağlık yoklaması.
+"""BeamVio sağlık ölçümü (ölçüm noktası: Türkiye).
 
-Her kontrol bağımsızdır; sonuç `docs/status.json`'a yazılır. Durum bir önceki
-çalışmaya göre değiştiyse `docs/incidents.json`'a kayıt düşülür. Kritik bir
-kontrol başarısızsa süreç 1 ile çıkar (iş kırmızıya düşer → GitHub e-posta ile
-bildirir).
+Kontrolleri çalıştırır ve ham sonucu `heartbeat.json`'a yazar. Değerlendirme
+(durum, olay kaydı, alarm) GitHub'daki bekçi iş akışında (`watchdog.py`) yapılır;
+bu betik yalnız ölçer.
 
 Ortam değişkenleri:
-  RELAY_ADDR      host:port — relay'in doğrudan adresi (gizli; loglara basılmaz)
-  KNOWN_ISSUES    virgülle ayrılmış kontrol adları: başarısız olsalar da alarm
-                  üretmezler ve sayfada gösterilmezler (yalnız iş günlüğünde).
+  RELAY_ADDR   host:port — bağlantı sunucusunun doğrudan adresi
 """
 
 import json
@@ -16,7 +13,6 @@ import os
 import socket
 import ssl
 import struct
-import sys
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -24,8 +20,6 @@ from datetime import datetime, timezone
 WEB = "https://beamvio.com"
 UA = "beamvio-status/1.0"
 TIMEOUT = 15
-DOCS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
-MAX_INCIDENTS = 200
 
 
 def http(url, method="GET"):
@@ -113,57 +107,21 @@ CHECKS = [
 ]
 
 
-def load(path, default):
-    try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return default
-
-
 def main():
-    known = {x.strip() for x in os.environ.get("KNOWN_ISSUES", "").split(",") if x.strip()}
-    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    prev = load(os.path.join(DOCS, "status.json"), {}).get("checks", {})
-    incidents = load(os.path.join(DOCS, "incidents.json"), [])
-
+    out = os.environ.get("HEARTBEAT_FILE", "heartbeat.json")
     results = {}
-    alarm = []
-    changed = not prev
     for key, label, fn in CHECKS:
         try:
             ok, detail = fn()
         except Exception as e:
             ok, detail = False, type(e).__name__
-        state = "up" if ok else ("known" if key in known else "down")
-        print(f"{key:13} {state:6} {detail}")
-        # Bilinen sorun sayfada gösterilmez; yalnız iş günlüğünde kalır.
-        if state == "known":
-            continue
-        old = prev.get(key, {})
-        since = old.get("since") if old.get("state") == state else now
-        results[key] = {"label": label, "state": state, "detail": detail, "since": since}
-        if old and old.get("state") != state:
-            changed = True
-            incidents.insert(0, {"at": now, "check": key, "label": label, "from": old.get("state"), "to": state, "detail": detail})
-        if state == "down":
-            alarm.append(f"{label}: {detail}")
-
-    os.makedirs(DOCS, exist_ok=True)
-    overall = "down" if alarm else "up"
-    status = {"checkedAt": now, "overall": overall, "checks": results}
-    with open(os.path.join(DOCS, "status.json"), "w", encoding="utf-8") as f:
-        json.dump(status, f, ensure_ascii=False, indent=2)
-    with open(os.path.join(DOCS, "incidents.json"), "w", encoding="utf-8") as f:
-        json.dump(incidents[:MAX_INCIDENTS], f, ensure_ascii=False, indent=2)
-
-    # Yalnız durum değişince commit edilir (iş akışı bu işarete bakar).
-    if changed:
-        open(os.path.join(os.path.dirname(DOCS), ".changed"), "w").close()
-
-    if alarm:
-        print("ALARM: " + "; ".join(alarm))
-        sys.exit(1)
+        results[key] = {"label": label, "ok": ok, "detail": detail}
+    beat = {
+        "checkedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "results": results,
+    }
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(beat, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":

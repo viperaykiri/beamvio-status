@@ -1,15 +1,13 @@
 # beamvio-status
 
-BeamVio hizmetlerinin dış sağlık yoklaması ve durum sayfası.
+BeamVio hizmetlerinin sağlık ölçümü ve durum sayfası.
 
-- `probe.py` — web sitesi, panel, güncelleme servisi, indirme ve bağlantı sunucusunu yoklar.
-- `.github/workflows/probe.yml` — 10 dakikada bir çalışır; kritik bir kontrol başarısızsa iş
-  kırmızıya düşer ve GitHub hesap sahibine e-posta ile bildirir.
-- `docs/` — GitHub Pages durum sayfası (`status.json`, `incidents.json`).
+- **Ölçüm noktası (Türkiye):** `probe.py` + `agent/run.sh` sunucuda 5 dakikada bir çalışır;
+  web sitesi, panel, güncelleme servisi, indirme ve bağlantı sunucusunu yoklar, sonucu
+  tek commit'lik `heartbeat` dalına yazar.
+- **Bekçi (GitHub Actions):** `watchdog.py` 10 dakikada bir nabzı değerlendirir. Bir kontrol
+  başarısızsa ya da nabız 20 dakikadan eskiyse iş kırmızıya düşer ve GitHub hesap sahibine
+  e-posta gönderir.
+- **Durum sayfası:** `docs/` (GitHub Pages).
 
-Ayarlar (depo → Settings → Secrets and variables → Actions):
-
-| Ad | Tür | Açıklama |
-|---|---|---|
-| `RELAY_ADDR` | secret | Bağlantı sunucusunun doğrudan adresi (`host:port`) |
-| `KNOWN_ISSUES` | variable | Alarm üretmeyecek kontroller (virgülle), ör. `relay_public` |
+`KNOWN_ISSUES` (Actions değişkeni): alarm üretmeyecek ve sayfada gösterilmeyecek kontroller.
