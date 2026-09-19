@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-09-19T14:13:30+00:00",
+  "overall": "up",
+  "checks": {
+    "probe": {
+      "label": "Ölçüm noktası",
+      "state": "up",
+      "detail": "1 dk önce",
+      "since": "2026-09-19T14:13:30+00:00"
+    },
+    "site": {
+      "label": "Web sitesi",
+      "state": "up",
+      "detail": "HTTP 200",
+      "since": "2026-09-19T14:13:30+00:00"
+    },
+    "panel": {
+      "label": "Yönetim paneli",
+      "state": "up",
+      "detail": "HTTP 200",
+      "since": "2026-09-19T14:13:30+00:00"
+    },
+    "manifest": {
+      "label": "Güncelleme servisi",
+      "state": "up",
+      "detail": "sürüm 1.41.0",
+      "since": "2026-09-19T14:13:30+00:00"
+    },
+    "download": {
+      "label": "İndirme",
+      "state": "up",
+      "detail": "HTTP 200",
+      "since": "2026-09-19T14:13:30+00:00"
+    },
+    "relay": {
+      "label": "Bağlantı sunucusu",
+      "state": "up",
+      "detail": "0 ms",
+      "since": "2026-09-19T14:13:30+00:00"
+    }
+  }
+}
