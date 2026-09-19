@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BeamVio Durum</title>
+<meta name="description" content="BeamVio hizmetlerinin anlık durumu">
+<style>
+  :root {
+    --bg: #f6f8fb; --card: #ffffff; --text: #0f1b2d; --muted: #5b6b80; --line: #e3e8ef;
+    --up: #14a36b; --down: #d6453d; --pending: #9aa7b8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1220; --card: #111a2c; --text: #e6edf7; --muted: #93a3b8; --line: #1f2a40; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  a { color: inherit; }
+  .banner { border-radius: 12px; padding: 18px 20px; font-weight: 600; color: #fff; margin-bottom: 20px; }
+  .banner.up { background: var(--up); } .banner.down { background: var(--down); } .banner.pending { background: var(--pending); }
+  .banner small { display: block; font-weight: 400; opacity: .9; margin-top: 2px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .name { font-weight: 500; }
+  .meta { color: var(--muted); font-size: 13px; text-align: right; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+  .dot.up { background: var(--up); } .dot.down { background: var(--down); }
+  h2 { font-size: 15px; margin: 32px 0 10px; }
+  .empty { color: var(--muted); padding: 14px 18px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>BeamVio · Hizmet durumu</h1>
+    <a href="https://beamvio.com" class="meta">beamvio.com</a>
+  </header>
+
+  <div id="banner" class="banner pending">Durum yükleniyor…</div>
+  <div class="card" id="checks"></div>
+
+  <h2>Son olaylar</h2>
+  <div class="card" id="incidents"></div>
+
+  <footer id="foot">Kontroller 10 dakikada bir yapılır.</footer>
+</main>
+<script>
+  const fmt = (iso) => new Date(iso).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" });
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const word = { up: "Çalışıyor", down: "Sorun var" };
+
+  async function load() {
+    const [status, incidents] = await Promise.all([
+      fetch("status.json", { cache: "no-store" }).then((r) => r.json()),
+      fetch("incidents.json", { cache: "no-store" }).then((r) => r.json()).catch(() => []),
+    ]);
+
+    const banner = document.getElementById("banner");
+    const down = status.overall === "down";
+    banner.className = "banner " + (down ? "down" : "up");
+    banner.innerHTML = (down ? "Bazı hizmetlerde sorun var" : "Tüm hizmetler çalışıyor") +
+      "<small>Son durum değişikliği: " + esc(fmt(status.checkedAt)) + "</small>";
+
+    document.getElementById("checks").innerHTML = Object.values(status.checks).map((c) =>
+      '<div class="row"><span class="name"><span class="dot ' + esc(c.state) + '"></span>' + esc(c.label) +
+      '</span><span class="meta">' + esc(word[c.state] || c.state) + "<br>" + esc(fmt(c.since)) + " itibarıyla</span></div>"
+    ).join("");
+
+    const list = incidents.slice(0, 20);
+    document.getElementById("incidents").innerHTML = list.length
+      ? list.map((i) =>
+          '<div class="row"><span class="name"><span class="dot ' + esc(i.to) + '"></span>' + esc(i.label) +
+          ": " + esc(word[i.to] || i.to) + '</span><span class="meta">' + esc(fmt(i.at)) + "</span></div>"
+        ).join("")
+      : '<div class="empty">Kayıtlı olay yok.</div>';
+
+    try {
+      const r = await fetch("https://api.github.com/repos/viperaykiri/beamvio-status/actions/workflows/probe.yml/runs?per_page=1");
+      const run = (await r.json()).workflow_runs?.[0];
+      if (run) document.getElementById("foot").textContent =
+        "Kontroller 10 dakikada bir yapılır. Son kontrol: " + fmt(run.updated_at) + ".";
+    } catch (_) {}
+  }
+
+  load().catch(() => {
+    const b = document.getElementById("banner");
+    b.textContent = "Durum bilgisi alınamadı.";
+  });
+</script>
+</body>
+</html>

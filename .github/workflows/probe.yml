@@ -1,0 +1,44 @@
+name: probe
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Yokla
+        id: probe
+        env:
+          RELAY_ADDR: ${{ secrets.RELAY_ADDR }}
+          KNOWN_ISSUES: ${{ vars.KNOWN_ISSUES }}
+        run: python probe.py
+
+      # Durum değiştiyse (ya da günde bir kez, deponun etkin kalması için) kaydet.
+      - name: Kaydet
+        if: always()
+        run: |
+          hour=$(date -u +%H); minute=$(date -u +%M)
+          if [ -f .changed ] || { [ "$hour" = "03" ] && [ "$minute" -lt 10 ]; }; then
+            git config user.name "beamvio-status"
+            git config user.email "actions@users.noreply.github.com"
+            git add docs/status.json docs/incidents.json
+            git diff --cached --quiet || git commit -m "durum: $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
