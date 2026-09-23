@@ -1,11 +1,11 @@
 {
-  "checkedAt": "2026-09-19T14:13:30+00:00",
+  "checkedAt": "2026-09-23T03:09:18+00:00",
   "overall": "up",
   "checks": {
     "probe": {
       "label": "Ölçüm noktası",
       "state": "up",
-      "detail": "1 dk önce",
+      "detail": "4 dk önce",
       "since": "2026-09-19T14:13:30+00:00"
     },
     "site": {
@@ -23,7 +23,7 @@
     "manifest": {
       "label": "Güncelleme servisi",
       "state": "up",
-      "detail": "sürüm 1.41.0",
+      "detail": "sürüm 1.43.0",
       "since": "2026-09-19T14:13:30+00:00"
     },
     "download": {
