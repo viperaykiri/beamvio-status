@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-09-26T21:35:32+00:00",
+  "results": {
+    "site": {
+      "label": "Web sitesi",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    "panel": {
+      "label": "Yönetim paneli",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    "manifest": {
+      "label": "Güncelleme servisi",
+      "ok": true,
+      "detail": "sürüm 1.43.1"
+    },
+    "download": {
+      "label": "İndirme",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    "relay": {
+      "label": "Bağlantı sunucusu",
+      "ok": true,
+      "detail": "0 ms"
+    },
+    "relay_public": {
+      "label": "Bağlantı sunucusu (genel DNS)",
+      "ok": false,
+      "detail": "OSError"
+    }
+  }
+}
