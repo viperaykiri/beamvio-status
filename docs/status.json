@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-23T03:09:18+00:00",
+  "checkedAt": "2026-10-06T03:04:26+00:00",
   "overall": "up",
   "checks": {
     "probe": {
@@ -23,7 +23,7 @@
     "manifest": {
       "label": "Güncelleme servisi",
       "state": "up",
-      "detail": "sürüm 1.43.0",
+      "detail": "sürüm 1.43.2",
       "since": "2026-09-19T14:13:30+00:00"
     },
     "download": {
